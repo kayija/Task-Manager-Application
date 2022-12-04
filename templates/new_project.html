@@ -1,0 +1,26 @@
+{% extends 'bootstrap/base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Login{% endblock %}
+
+
+
+{% block content %}
+{% block content %}
+<a href="{{url_for('home')}}">Home</a>
+{% if not current_user.is_authenticated %}
+<a href="{{ url_for('login') }}"> Login </a>
+<a href="{{ url_for('registration') }}"> Register </a>
+
+{% else %}
+
+<a href ="{{url_for('projects')}}">Projects</a>
+<a href="{{ url_for('logout') }}"> Log Out </a>
+
+{% endif %}
+
+{{ wtf.quick_form(form) }}
+
+
+
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block content %}
+
+<a href="{{url_for('home')}}">Home</a>
+{% if not current_user.is_authenticated %}
+<a href="{{ url_for('login') }}"> Login </a>
+<a href="{{ url_for('registration') }}"> Register </a>
+
+{% else %}
+
+<a href ="{{url_for('projects')}}">Projects</a>
+<a href="{{ url_for('logout') }}"> Log Out </a>
+
+{% endif %}
+<h1>{{project.project_name}} To Do's</h1>
+
+
+
+<div class="row">
+    {% for to_do in project_todo %}
+  <div class="col-sm-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{ to_do.to_do_name}} &nbsp<a href="{{url_for('delete_todo', to_do_id=to_do.id)}}">✘</a></h5>
+        <p class="card-text">{{to_do.to_do_description}}</p>
+        <p>{{to_do.to_do_status}}</p>
+          <form method="POST" action="{{url_for('change_status', to_do_id=to_do.id) }}">
+            <label for="select-status">Change project status:</label>
+              <select id="select-status" name="select-status">
+                   <option value="">--Please choose an status--</option>
+                    <option value="Not Started">Not Started</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+              </select>
+              <input type="submit" value="Submit">
+          </form>
+            <p>{{to_do.completion_timeline}}</p>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+    </div>
+
+
+<p><a href="{{ url_for('add_task', projects_id=project.id)}}">Add Task</a></p>
+<p><a href="{{ url_for('projects')}}">Projects</a></p>
+{% endblock %}
