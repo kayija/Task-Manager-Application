@@ -30,6 +30,7 @@ def load_user(user_id):
     return Users.query.get(int(user_id))
 
 
+# connecting to the database
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///Todo.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -38,6 +39,7 @@ db = SQLAlchemy(app)
 app.app_context().push()
 
 
+# Users table
 class Users(UserMixin, db.Model):
     __tablename__ = "Users_Table"
     id = db.Column(db.Integer, primary_key=True)
@@ -48,6 +50,7 @@ class Users(UserMixin, db.Model):
     projects = relationship("Projects", back_populates="project_owner")
 
 
+# Projects Table
 class Projects(db.Model):
     __tablename__ = "Projects_Table"
     id = db.Column(db.Integer, primary_key=True)
@@ -61,6 +64,7 @@ class Projects(db.Model):
     tasks = relationship("To_Do", back_populates="tasks_name")
 
 
+# To Do table
 class To_Do(db.Model):
     __tablename__ = "ToDo_Table"
     id = db.Column(db.Integer, primary_key=True)
@@ -76,6 +80,7 @@ class To_Do(db.Model):
 db.create_all()
 
 
+# Registration form
 class Registration(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     email = EmailField("Email", validators=[DataRequired(), Email()])
@@ -83,12 +88,14 @@ class Registration(FlaskForm):
     submit = SubmitField("Register")
 
 
+# user login form
 class User_Login(FlaskForm):
     email = EmailField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Sign In")
 
 
+# create project form
 class CreateProjectForm(FlaskForm):
     Project_Name = StringField("Project Name", validators=[DataRequired()])
     Project_Description = StringField("Project Description", validators=[DataRequired()])
@@ -96,6 +103,7 @@ class CreateProjectForm(FlaskForm):
     submit = SubmitField("Add Project")
 
 
+# Add to do form
 class AddToDo(FlaskForm):
     ToDo_Name = StringField("To Do Name", validators=[DataRequired()])
     ToDo_Description = StringField("ToDO Description", validators=[DataRequired()])
@@ -104,19 +112,23 @@ class AddToDo(FlaskForm):
     submit = SubmitField("Add Task")
 
 
+# home route
 @app.route('/', methods=["GET", "POST"])
 def home():
     return render_template("index.html", current_user=current_user )
 
 
+# registration route
 # this works
 @app.route('/registration', methods=["GET", "POST"])
 def registration():
     form = Registration()
     if form.validate_on_submit():
+        # this query will check if the email already exist
         if Users.query.filter_by(user_email=form.email.data).first():
             flash("You've already signed up with that email, log in instead!")
             return redirect(url_for('login'))
+        # this will create a hash of the password the user entered
         hashed_password = generate_password_hash(form.password.data, method=("pbkdf2:sha256"), salt_length=8)
         new_user = Users(name=form.name.data, user_email=form.email.data, user_password=hashed_password)
         db.session.add(new_user)
@@ -125,19 +137,27 @@ def registration():
     return render_template("registration.html", form=form)
 
 
+# route for login
 # this works
 @app.route('/login', methods=["GET", "POST"])
 def login():
     form = User_Login()
     if form.validate_on_submit():
+        # this will check if the user exists
         user = Users.query.filter_by(user_email=form.email.data).first()
         if user:
             if check_password_hash(user.user_password, form.password.data):
                 login_user(user)
                 return redirect(url_for("projects"))
+            # this will display a message if the password is incorrect
+            else:
+                flash("Password Incorrect")
+        else:
+            flash("Email Incorrect")
     return render_template("login.html", form=form)
 
 
+# projects route
 # this works
 @app.route('/projects', methods=["GET", "POST"])
 @login_required
@@ -146,6 +166,7 @@ def projects():
     return render_template("projects.html", projects=project)
 
 
+# add project route
 # this works
 @app.route('/new_project', methods=["GET", "POST"])
 @login_required
@@ -160,6 +181,7 @@ def add_project():
     return render_template("new_project.html", form=form, current_user=current_user)
 
 
+# projects to do route
 @app.route('/project-todo/<int:projects_id>', methods=["GET", "POST"])
 @login_required
 def project_todo(projects_id):
@@ -168,6 +190,7 @@ def project_todo(projects_id):
     return render_template("project-todo.html", project_todo=to_do, project=current_project)
 
 
+# add task route
 @app.route('/add-todo/<int:projects_id>', methods=["GET", "POST"])
 @login_required
 def add_task(projects_id):
@@ -183,10 +206,12 @@ def add_task(projects_id):
     return render_template("add_todo.html", form=new_todo_form, project=current_project)
 
 
+# this route will allow the user to change the status of a to do
 @app.route('/change-status/<int:to_do_id>', methods=["GET", "POST"])
 @login_required
 def change_status(to_do_id):
     change_to_do_status = To_Do.query.get(to_do_id)
+    # this will create the database and change the status
     if request.method == "POST":
         change_to_do_status.to_do_status = request.form.get("select-status")
         db.session.commit()
@@ -194,6 +219,7 @@ def change_status(to_do_id):
     return redirect("project-todo.html")
 
 
+# delete project
 @app.route("/delete/<int:projects_id>", methods=["GET", "POST"])
 @login_required
 def delete_project(projects_id):
@@ -203,6 +229,7 @@ def delete_project(projects_id):
     return redirect(url_for('projects'))
 
 
+# delete to do route
 @app.route("/delete_to_do/<int:to_do_id>", methods=["GET", "POST"])
 @login_required
 def delete_todo(to_do_id):
