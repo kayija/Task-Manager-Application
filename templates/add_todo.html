@@ -6,8 +6,6 @@
 
 
 {% block content %}
-
-{% block content %}
 <a href="{{url_for('home')}}">Home</a>
 {% if not current_user.is_authenticated %}
 <a href="{{ url_for('login') }}"> Login </a>
